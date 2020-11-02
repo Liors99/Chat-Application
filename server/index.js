@@ -45,17 +45,17 @@ io.on("connection", (socket) => {
     });
 
 
-    socket.on("message", ({ thisName, message }) => {
-        const name = thisName;
-        const user_obj = all_active_users[name];
-        io.emit("message", { name, user_obj, message, })
+    socket.on("message", (data) => {
+        //const name = data.username;
+        const att = all_active_users[data.username];
+        io.emit("message", { username: data.username, att: att, message: data.message });
     });
 
 
     //Change color
-    socket.on('set color', ({ thisName, color }) => {
-        console.log(color);
-        all_active_users[thisName]["color"] = color;
+    socket.on('set color', (data) => {
+
+        all_active_users[data.username]["color"] = data.color;
     });
 });
 

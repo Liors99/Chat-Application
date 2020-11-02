@@ -31,8 +31,12 @@ function App() {
       setActiveUsers(oldUsers => oldUsers.filter(val => val !== username));
     });
 
-    socket.on('message', ({ name, user_obj, message }) => {
-      setChat(oldChat => [...oldChat, { name, user_obj, message }]);
+    socket.on('message', (data) => {
+      const username = data.username;
+      const att = data.att;
+      const message = data.message;
+
+      setChat(oldChat => [...oldChat, { username: username, att: att, message: message }]);
     });
 
     socket.on('set username', (username) => {
@@ -73,7 +77,7 @@ function App() {
 
         //If we got to this stage, then the input is valid
         const color = "rgb(" + msg_ar[1] + "," + msg_ar[2] + "," + msg_ar[3] + ")";
-        socket.emit('set color', { thisName, color });
+        socket.emit('set color', { username: thisName, color: color });
 
         setInputErrorMsg("");
         setMessage("");
@@ -84,7 +88,7 @@ function App() {
     }
     else {
       //Otherwise it is a normal message
-      socket.emit('message', { thisName, message });
+      socket.emit('message', { username: thisName, message: message });
       setMessage("");
     }
 
@@ -101,10 +105,10 @@ function App() {
   }
 
   const renderChat = () => {
-    return chat.map(({ name, user_obj, message }, index) => (
+    return chat.map(({ username, att, message }, index) => (
       <div key={index}>
-        <h3 style={{ "color": user_obj["color"] }}>
-          {name}: <span style={{ color: "black" }}>{message}</span>
+        <h3 style={{ "color": att["color"] }}>
+          {username}: <span style={{ color: "black" }}>{message}</span>
         </h3>
       </div>
     ))
@@ -148,8 +152,6 @@ function App() {
                       onChange={e => onTextChange(e)}
                       value={message}
                       label="Message"
-                      rows={1}
-                      multiline
                       fullWidth
                       className={"text-area"}
 
