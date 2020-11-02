@@ -20,6 +20,9 @@ const generateUserId = () => {
 io.on("connection", (socket) => {
     //TODO: Check cookie and assign previous username
     const username = generateUserId();
+    //Add the user to all the users list
+    all_active_users[username] = { "color": "rgb(0, 0, 0)" };
+    const username_obj = all_active_users[username];
 
     //Assign username
     socket.emit('set username', username);
@@ -28,12 +31,12 @@ io.on("connection", (socket) => {
 
     //Let the new connection know of all the existing users
     for (const connected_user in all_active_users) {
-        socket.emit('user connect', connected_user);
+        if (connected_user !== username) {
+            socket.emit('user connect', connected_user);
+        }
     }
 
-    //Add the user to all the users list
-    //all_active_users.push(username);
-    all_active_users[username] = { "color": "rgb(0, 0, 0)" };
+
 
     //Handle disconnect
     socket.on('disconnect', () => {
@@ -42,9 +45,17 @@ io.on("connection", (socket) => {
     });
 
 
-    socket.on("message", ({ name, message }) => {
+    socket.on("message", ({ thisName, message }) => {
+        const name = thisName;
         const user_obj = all_active_users[name];
         io.emit("message", { name, user_obj, message, })
+    });
+
+
+    //Change color
+    socket.on('set color', ({ thisName, color }) => {
+        console.log(color);
+        all_active_users[thisName]["color"] = color;
     });
 });
 

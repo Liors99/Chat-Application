@@ -10,8 +10,9 @@ import './App.css';
 const socket = io.connect("http://localhost:4000");
 
 function App() {
-  const [name, setName] = useState("");
+  const [thisName, setThisName] = useState("");
   const [message, setMessage] = useState("");
+  const [inputErrorMsg, setInputErrorMsg] = useState("");
   const [chat, setChat] = useState([]);
   const [activeUsers, setActiveUsers] = useState([]);
 
@@ -19,7 +20,7 @@ function App() {
   useEffect(() => {
 
     //Handle new user
-    socket.on('user connect', (username) => {
+    socket.on('user connect', (username, username_obj) => {
       console.log("Connected user: " + username);
       setActiveUsers(oldUsers => [...oldUsers, username]);
     });
@@ -35,7 +36,7 @@ function App() {
     });
 
     socket.on('set username', (username) => {
-      setName(username);
+      setThisName(username);
     });
   }, []);
 
@@ -45,14 +46,54 @@ function App() {
 
   const onMessageSubmit = (e) => {
     e.preventDefault();
-    socket.emit('message', { name, message });
-    setMessage("");
+    //Check if the message is a command
+    if (message.charAt(0) === '/') {
+      const msg_ar = message.split(' ');
+
+      //Input validation for the color command
+      if (msg_ar[0] === "/color") {
+        if (msg_ar.length !== 4) {
+          setInputErrorMsg("Usage: /color R G B");
+          return;
+        }
+        for (let i = 1; i < 4; i++) {
+          //Check if it is a number
+          if (isNaN(msg_ar[i])) {
+            setInputErrorMsg("Colors must be numbers");
+            return;
+          }
+
+          //At this point the value is a number, so check if value is between 0 and 255
+          const c_val = parseInt(msg_ar[i]);
+          if (c_val < 0 || c_val > 255) {
+            setInputErrorMsg("Colors values must be between 0 and 255 (inclusively)");
+            return;
+          }
+        }
+
+        //If we got to this stage, then the input is valid
+        const color = "rgb(" + msg_ar[1] + "," + msg_ar[2] + "," + msg_ar[3] + ")";
+        socket.emit('set color', { thisName, color });
+
+        setInputErrorMsg("");
+        setMessage("");
+      }
+      else {
+        setInputErrorMsg("Invalid command");
+      }
+    }
+    else {
+      //Otherwise it is a normal message
+      socket.emit('message', { thisName, message });
+      setMessage("");
+    }
+
   }
 
   const renderActiveUserList = () => {
     return activeUsers.map(username => (
       <Grid item xs={12}>
-        <h2>{username} {username === name ? "(You)" : ""}</h2>
+        <h2>{username} {username === thisName ? "(You)" : ""}</h2>
       </Grid>
     ))
 
@@ -62,8 +103,8 @@ function App() {
   const renderChat = () => {
     return chat.map(({ name, user_obj, message }, index) => (
       <div key={index}>
-        <h3>
-          {name}: <span style={{ "color": user_obj["color"] }}>{message}</span>
+        <h3 style={{ "color": user_obj["color"] }}>
+          {name}: <span style={{ color: "black" }}>{message}</span>
         </h3>
       </div>
     ))
@@ -101,6 +142,8 @@ function App() {
                 <Grid container spacing={0} style={{ height: "100%" }}>
                   <Grid item xs={10}>
                     <TextField
+                      error={inputErrorMsg === "" ? false : true}
+                      helperText={inputErrorMsg}
                       name="message"
                       onChange={e => onTextChange(e)}
                       value={message}
