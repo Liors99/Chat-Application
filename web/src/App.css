@@ -1,0 +1,57 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,body{
+    height: 100%;
+}
+
+html{
+    font-family: Arial, Helvetica, sans-serif;
+    background: linear-gradient(to right, #57c1eb 0%, #246fa8 100%);
+    font-size: 10px;
+}
+
+body{
+    display: grid;
+    place-items: center;
+}
+
+#chat-container{
+    
+    width: min(900px, 100vw);
+    height: min(900px, 95vh);
+    background: white;
+    border-radius: 10px;
+
+}
+
+#chat-window{
+    height: 95%;
+}
+
+#user-list{
+    height: 100%;
+    background: #0048AA;
+}
+
+#chat-and-msg{
+    height: 100%;
+}
+
+#new-message-container{
+    background: #eee;
+    border-top: 1px solid rgba(0, 0, 0, 25);
+    border-radius: 0 0 0 10px;
+    height: 5%;
+    width: 100%;
+
+}
+
+
+.text-area{
+    height: 100%;
+    
+}
