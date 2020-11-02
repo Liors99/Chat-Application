@@ -4,6 +4,7 @@ const io = require("socket.io")(http);
 
 
 io.on("connection", (socket) => {
+    socket.emit('set username', "user-" + socket.id);
     socket.on("message", ({ name, message }) => {
         io.emit("message", { name, message })
     });
