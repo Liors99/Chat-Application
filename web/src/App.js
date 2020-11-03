@@ -61,6 +61,48 @@ function App() {
 
       setActiveUsers((oldUsers) => ({ ...oldUsers, [data.username]: data.att }));
     });
+
+    //Checking for new updated username
+    socket.on('update valid username', (data) => {
+      const old_username = data.old_username;
+      const new_username = data.new_username;
+      console.log("NEW VALID USERNAME");
+
+      //Add the "new" username and assign it all the attributes of the old name
+      setActiveUsers((oldUsers) => {
+        let newUsers = oldUsers;
+        const old_att = newUsers[old_username];
+        newUsers[new_username] = old_att;
+
+        return newUsers;
+      });
+
+      //Remove the old name
+      setActiveUsers((oldUsers) => {
+        let newUsers = oldUsers;
+        delete newUsers[old_username];
+
+        return newUsers;
+      });
+
+      //Update our name if it matches with the one sent
+      setThisName(oldName => {
+        if (oldName === old_username) {
+          return new_username;
+        }
+        else {
+          return oldName;
+        }
+      });
+
+      //Force the render
+      setState({});
+    });
+
+    //Checking for invalid username (i.e. taken)
+    socket.on('update invalid username', () => {
+      setInputErrorMsg("Selected username is already taken")
+    });
   }, []);
 
   const onTextChange = (e) => {
@@ -98,6 +140,18 @@ function App() {
         const color = "rgb(" + msg_ar[1] + "," + msg_ar[2] + "," + msg_ar[3] + ")";
         socket.emit('set color', { username: thisName, color: color });
 
+        setInputErrorMsg("");
+        setMessage("");
+      }
+      //Input validation for the name command
+      else if (msg_ar[0] === "/name") {
+        if (msg_ar.length !== 2) {
+          setInputErrorMsg("Usage: /name <new name>");
+          return;
+        }
+
+        //If we are at this point the input has been validated
+        socket.emit('update username', { old_username: thisName, new_username: msg_ar[1] });
         setInputErrorMsg("");
         setMessage("");
       }

@@ -21,18 +21,23 @@ io.on("connection", (socket) => {
     //TODO: Check cookie and assign previous username
     const username = generateUserId();
     //Add the user to all the users list
-    all_active_users[username] = { "color": "rgb(0, 0, 0)" };
-    const username_obj = all_active_users[username];
+    all_active_users[socket.id] = {};
+    all_active_users[socket.id]["username"] = username;
+    all_active_users[socket.id]["att"] = { "color": "rgb(0, 0, 0)" }
+    //all_active_users[socket.id][username] = { "color": "rgb(0, 0, 0)" };
+
+    const user_obj = all_active_users[socket.id];
 
     //Assign username
-    socket.emit('set username', username);
+    socket.emit('set username', user_obj["username"]);
     //Notify all connected users of the newly connected user
-    io.emit('user connect', { username: username, att: all_active_users[username] });
+    io.emit('user connect', { username: user_obj["username"], att: user_obj["att"] });
 
     //Let the new connection know of all the existing users
-    for (const connected_user in all_active_users) {
-        if (connected_user !== username) {
-            socket.emit('user connect', { username: connected_user, att: all_active_users[connected_user] });
+    for (const sock_id in all_active_users) {
+        if (sock_id !== socket.id) {
+            const connected_user_obj = all_active_users[sock_id];
+            socket.emit('user connect', { username: connected_user_obj["username"], att: connected_user_obj["att"] });
         }
     }
 
@@ -40,23 +45,55 @@ io.on("connection", (socket) => {
 
     //Handle disconnect
     socket.on('disconnect', () => {
-        delete all_active_users[username];
-        io.emit('user disconnect', username);
+        io.emit('user disconnect', user_obj["username"]);
+        delete all_active_users[socket.id];
     });
 
 
     socket.on("message", (data) => {
         //const name = data.username;
-        const att = all_active_users[data.username];
+        const att = user_obj["att"];
         io.emit("message", { username: data.username, att: att, message: data.message });
     });
 
 
     //Change color
     socket.on('set color', (data) => {
-        all_active_users[data.username]["color"] = data.color;
+        user_obj["att"]["color"] = data.color;
         //Notify all the users
-        io.emit('update color', { username: data.username, att: all_active_users[data.username] });
+        io.emit('update color', { username: data.username, att: user_obj["att"] });
+    });
+
+    //Change name
+    socket.on('update username', (data) => {
+        const old_username = data.old_username;
+        const new_username = data.new_username;
+
+        let isTaken = false;
+        //Check if username is already taken (or is itself)
+        for (const sock_id in all_active_users) {
+            const connected_user_username = all_active_users[sock_id]["username"];
+            if (new_username === connected_user_username) {
+                socket.emit('update invalid username');
+                isTaken = true;
+                break;
+            }
+
+        }
+
+        //Username is not taken, so update local copy and let the rest know
+        if (!isTaken) {
+            //const temp = user_obj["username"];
+
+            delete user_obj["username"];
+            user_obj["username"] = new_username;
+
+            console.log("senidng event");
+            io.emit('update valid username', { old_username: old_username, new_username: new_username });
+        }
+
+
+
     });
 });
 
