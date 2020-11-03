@@ -27,12 +27,12 @@ io.on("connection", (socket) => {
     //Assign username
     socket.emit('set username', username);
     //Notify all connected users of the newly connected user
-    io.emit('user connect', username);
+    io.emit('user connect', { username: username, att: all_active_users[username] });
 
     //Let the new connection know of all the existing users
     for (const connected_user in all_active_users) {
         if (connected_user !== username) {
-            socket.emit('user connect', connected_user);
+            socket.emit('user connect', { username: connected_user, att: all_active_users[connected_user] });
         }
     }
 
@@ -54,8 +54,9 @@ io.on("connection", (socket) => {
 
     //Change color
     socket.on('set color', (data) => {
-
         all_active_users[data.username]["color"] = data.color;
+        //Notify all the users
+        io.emit('update color', { username: data.username, att: all_active_users[data.username] });
     });
 });
 

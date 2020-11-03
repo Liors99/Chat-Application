@@ -14,22 +14,29 @@ function App() {
   const [message, setMessage] = useState("");
   const [inputErrorMsg, setInputErrorMsg] = useState("");
   const [chat, setChat] = useState([]);
-  const [activeUsers, setActiveUsers] = useState([]);
+  const [activeUsers, setActiveUsers] = useState({});
 
 
   useEffect(() => {
 
     //Handle new user
-    socket.on('user connect', (username, username_obj) => {
-      console.log("Connected user: " + username);
-      setActiveUsers(oldUsers => [...oldUsers, username]);
+    socket.on('user connect', (data) => {
+      console.log("Connected user: " + data.username);
+      setActiveUsers((oldUsers) => ({ ...oldUsers, [data.username]: data.att }));
     });
+
 
     //Handle user disconnect
     socket.on('user disconnect', (username) => {
       console.log("Disconnected user: " + username);
-      setActiveUsers(oldUsers => oldUsers.filter(val => val !== username));
+      setActiveUsers((oldUsers) => {
+        let newUsers = oldUsers;
+        delete newUsers[username];
+        return (newUsers);
+        //oldUsers.filter(val => val !== username);
+      });
     });
+
 
     socket.on('message', (data) => {
       const username = data.username;
@@ -41,6 +48,14 @@ function App() {
 
     socket.on('set username', (username) => {
       setThisName(username);
+    });
+
+    socket.on('update color', (data) => {
+      //let newUsers = activeUsers;
+      //console.log(newUsers);
+      //newUsers[data.username]["color"] = data.color;
+
+      setActiveUsers((oldUsers) => ({ ...oldUsers, [data.username]: data.att }));
     });
   }, []);
 
@@ -95,12 +110,26 @@ function App() {
   }
 
   const renderActiveUserList = () => {
+    let ret = [];
+    for (let user in activeUsers) {
+      const user_color = activeUsers[user]["color"];
+      //console.log(activeUsers[user]["color"]);
+      ret.push(
+        <Grid item xs={12}>
+          <h2 style={{ color: user_color }}>{user} {user === thisName ? "(You)" : ""}</h2>
+        </Grid>
+      );
+    }
+
+    return ret;
+
+    /*
     return activeUsers.map(username => (
       <Grid item xs={12}>
         <h2>{username} {username === thisName ? "(You)" : ""}</h2>
       </Grid>
     ))
-
+      */
 
   }
 
@@ -108,7 +137,7 @@ function App() {
     return chat.map(({ username, att, message }, index) => (
       <div key={index}>
         <h3 style={{ "color": att["color"] }}>
-          {username}: <span style={{ color: "black" }}>{message}</span>
+          {username}: <span style={{ color: "black", fontWeight: (username === thisName ? "bold" : "normal") }}>{message}</span>
         </h3>
       </div>
     ))
