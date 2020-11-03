@@ -10,6 +10,7 @@ import './App.css';
 const socket = io.connect("http://localhost:4000");
 
 function App() {
+  let [, setState] = useState();
   const [thisName, setThisName] = useState("");
   const [message, setMessage] = useState("");
   const [inputErrorMsg, setInputErrorMsg] = useState("");
@@ -35,6 +36,9 @@ function App() {
         return (newUsers);
         //oldUsers.filter(val => val !== username);
       });
+
+      //Force the render (for some reason returning a new object does not seem to re-render, just 1 clock cycle mutation operations on object...)
+      setState({});
     });
 
 
