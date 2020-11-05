@@ -109,6 +109,17 @@ function App() {
   }
 
   const onMessageSubmit = (e) => {
+
+    const parseEmojisMsg = (msg) => {
+      msg = msg.replace(":)", "🙂");
+      msg = msg.replace(":(", "🙁");
+      msg = msg.replace(":D", "😁");
+      msg = msg.replace(":O", "😮");
+      msg = msg.replace("<3", "❤️");
+
+      return msg;
+    }
+
     e.preventDefault();
     //Check if the message is a command
     if (message.charAt(0) === '/') {
@@ -160,7 +171,11 @@ function App() {
     }
     else {
       //Otherwise it is a normal message
-      socket.emit('message', { username: thisName, message: message });
+
+      //Parse any emojis
+      let parsed_msg = parseEmojisMsg(message);
+      console.log(parsed_msg);
+      socket.emit('message', { username: thisName, message: parsed_msg });
       setMessage("");
     }
 
