@@ -5,6 +5,9 @@ const io = require("socket.io")(http);
 //Dictiomary with username: {color: }
 let all_active_users = {};
 
+//Array containing all the previous messages
+let message_stack = [];
+
 //Generates a random 5 digit ID
 const generateUserId = () => {
     let id;
@@ -16,6 +19,15 @@ const generateUserId = () => {
     return username;
 }
 
+const addMessageToStack = (message) => {
+    const MAX_MSGS = 5;
+
+    if (message_stack.length >= MAX_MSGS) {
+        message_stack.shift();
+    }
+
+    message_stack.push(message);
+}
 
 io.on("connection", (socket) => {
     //TODO: Check cookie and assign previous username
@@ -41,6 +53,8 @@ io.on("connection", (socket) => {
         }
     }
 
+    //Let the new connection know of the previous messages
+    socket.emit('message log', message_stack);
 
 
     //Handle disconnect
@@ -50,10 +64,13 @@ io.on("connection", (socket) => {
     });
 
 
-    socket.on("message", (data) => {
-        //const name = data.username;
+    socket.on('message', (data) => {
         const att = user_obj["att"];
-        io.emit("message", { username: data.username, att: att, message: data.message });
+        //Add message to the stack and emit to the rest
+        const ts = new Date().toLocaleTimeString();
+        const send_obj = { username: data.username, att: att, message: data.message, ts: ts };
+        addMessageToStack(send_obj);
+        io.emit("message", send_obj);
     });
 
 

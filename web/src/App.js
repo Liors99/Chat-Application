@@ -34,7 +34,6 @@ function App() {
         let newUsers = oldUsers;
         delete newUsers[username];
         return (newUsers);
-        //oldUsers.filter(val => val !== username);
       });
 
       //Force the render (for some reason returning a new object does not seem to re-render, just 1 clock cycle mutation operations on object...)
@@ -46,8 +45,13 @@ function App() {
       const username = data.username;
       const att = data.att;
       const message = data.message;
+      const ts = data.ts
 
-      setChat(oldChat => [...oldChat, { username: username, att: att, message: message }]);
+      setChat(oldChat => [...oldChat, { username: username, att: att, message: message, ts: ts }]);
+    });
+
+    socket.on('message log', (data) => {
+      setChat(data);
     });
 
     socket.on('set username', (username) => {
@@ -55,10 +59,6 @@ function App() {
     });
 
     socket.on('update color', (data) => {
-      //let newUsers = activeUsers;
-      //console.log(newUsers);
-      //newUsers[data.username]["color"] = data.color;
-
       setActiveUsers((oldUsers) => ({ ...oldUsers, [data.username]: data.att }));
     });
 
@@ -66,7 +66,6 @@ function App() {
     socket.on('update valid username', (data) => {
       const old_username = data.old_username;
       const new_username = data.new_username;
-      console.log("NEW VALID USERNAME");
 
       //Add the "new" username and assign it all the attributes of the old name
       setActiveUsers((oldUsers) => {
@@ -171,7 +170,6 @@ function App() {
     let ret = [];
     for (let user in activeUsers) {
       const user_color = activeUsers[user]["color"];
-      //console.log(activeUsers[user]["color"]);
       ret.push(
         <Grid item xs={12}>
           <h2 style={{ color: user_color }}>{user} {user === thisName ? "(You)" : ""}</h2>
@@ -181,21 +179,13 @@ function App() {
 
     return ret;
 
-    /*
-    return activeUsers.map(username => (
-      <Grid item xs={12}>
-        <h2>{username} {username === thisName ? "(You)" : ""}</h2>
-      </Grid>
-    ))
-      */
-
   }
 
   const renderChat = () => {
-    return chat.map(({ username, att, message }, index) => (
+    return chat.map(({ username, att, message, ts }, index) => (
       <div key={index}>
         <h3 style={{ "color": att["color"] }}>
-          {username}: <span style={{ color: "black", fontWeight: (username === thisName ? "bold" : "normal") }}>{message}</span>
+          {username} at {ts} <span style={{ color: "black", fontWeight: (username === thisName ? "bold" : "normal") }}>{message}</span>
         </h3>
       </div>
     ))
