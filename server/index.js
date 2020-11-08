@@ -30,32 +30,59 @@ const addMessageToStack = (message) => {
 }
 
 io.on("connection", (socket) => {
-    //TODO: Check cookie and assign previous username
-    const username = generateUserId();
-    //Add the user to all the users list
-    all_active_users[socket.id] = {};
-    all_active_users[socket.id]["username"] = username;
-    all_active_users[socket.id]["att"] = { "color": "rgb(0, 0, 0)" }
-    //all_active_users[socket.id][username] = { "color": "rgb(0, 0, 0)" };
 
-    const user_obj = all_active_users[socket.id];
+    //Variables holding the user's information
+    let username;
+    let user_obj;
 
-    //Assign username
-    socket.emit('set username', user_obj["username"]);
-    //Notify all connected users of the newly connected user
-    io.emit('user connect', { username: user_obj["username"], att: user_obj["att"] });
-
-    //Let the new connection know of all the existing users
-    for (const sock_id in all_active_users) {
-        if (sock_id !== socket.id) {
-            const connected_user_obj = all_active_users[sock_id];
-            socket.emit('user connect', { username: connected_user_obj["username"], att: connected_user_obj["att"] });
+    //Checks if a username already exists
+    const isUsernameExist = (check_username) => {
+        for (const sock_id in all_active_users) {
+            const connected_user_username = all_active_users[sock_id]["username"];
+            if (check_username === connected_user_username) {
+                return true;
+            }
         }
+
+        return false;
     }
 
-    //Let the new connection know of the previous messages
-    socket.emit('message log', message_stack);
+    socket.on('cookie username', (data) => {
 
+        //If the data does contain a username (i.e. the client had a cookie with some username)
+        if (data.username !== null && !isUsernameExist(data["username"])) {
+            username = data["username"];
+        }
+        else {
+            username = generateUserId();
+        }
+
+        //Add the user to all the users list
+        all_active_users[socket.id] = {};
+        all_active_users[socket.id]["username"] = username;
+        all_active_users[socket.id]["att"] = { "color": "rgb(0, 0, 0)" }
+        //all_active_users[socket.id][username] = { "color": "rgb(0, 0, 0)" };
+
+        user_obj = all_active_users[socket.id];
+
+        //Assign username
+        socket.emit('set username', user_obj["username"]);
+        //Notify all connected users of the newly connected user
+        io.emit('user connect', { username: user_obj["username"], att: user_obj["att"] });
+
+        //Let the new connection know of all the existing users
+        for (const sock_id in all_active_users) {
+            if (sock_id !== socket.id) {
+                const connected_user_obj = all_active_users[sock_id];
+                socket.emit('user connect', { username: connected_user_obj["username"], att: connected_user_obj["att"] });
+            }
+        }
+
+        //Let the new connection know of the previous messages
+        socket.emit('message log', message_stack);
+
+
+    });
 
     //Handle disconnect
     socket.on('disconnect', () => {
@@ -86,30 +113,17 @@ io.on("connection", (socket) => {
         const old_username = data.old_username;
         const new_username = data.new_username;
 
-        let isTaken = false;
-        //Check if username is already taken (or is itself)
-        for (const sock_id in all_active_users) {
-            const connected_user_username = all_active_users[sock_id]["username"];
-            if (new_username === connected_user_username) {
-                socket.emit('update invalid username');
-                isTaken = true;
-                break;
-            }
-
+        if (isUsernameExist(new_username)) {
+            socket.emit('update invalid username');
         }
-
-        //Username is not taken, so update local copy and let the rest know
-        if (!isTaken) {
+        else {
             //const temp = user_obj["username"];
 
             delete user_obj["username"];
             user_obj["username"] = new_username;
 
-            console.log("senidng event");
             io.emit('update valid username', { old_username: old_username, new_username: new_username });
         }
-
-
 
     });
 });

@@ -20,6 +20,27 @@ function App() {
 
   useEffect(() => {
 
+    //Sets the cookie username information
+    const setCookieUsername = (username) => {
+      const MINUTES = 5;
+      let date = new Date();
+      date.setTime(date.getTime() + (MINUTES * 60 * 1000));
+      document.cookie = "username=" + username + "; expires = " + date.toUTCString() + ";";
+    }
+
+    //If there is a cookie with a username attribute on it (not expired), send it to the server (adapted from https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie)
+    if (document.cookie.split(';').some((item) => item.trim().startsWith('username='))) {
+      const cookieValue = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('username'))
+        .split('=')[1];
+      console.log(cookieValue);
+      socket.emit('cookie username', { "username": cookieValue });
+    }
+    else {
+      socket.emit('cookie username', { "username": null });
+    }
+
     //Handle new user
     socket.on('user connect', (data) => {
       console.log("Connected user: " + data.username);
@@ -55,6 +76,8 @@ function App() {
     });
 
     socket.on('set username', (username) => {
+      //Set the cookie info
+      setCookieUsername(username);
       setThisName(username);
     });
 
@@ -66,6 +89,9 @@ function App() {
     socket.on('update valid username', (data) => {
       const old_username = data.old_username;
       const new_username = data.new_username;
+
+      //Update the cookie information
+      setCookieUsername(new_username);
 
       //Add the "new" username and assign it all the attributes of the old name
       setActiveUsers((oldUsers) => {
