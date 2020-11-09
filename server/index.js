@@ -67,8 +67,8 @@ io.on("connection", (socket) => {
 
         //Assign username
         socket.emit('set username', user_obj["username"]);
-        //Notify all connected users of the newly connected user
-        io.emit('user connect', { username: user_obj["username"], att: user_obj["att"] });
+
+        //Dumb first and then emit later so that the order is preseved across different clients
 
         //Let the new connection know of all the existing users
         for (const sock_id in all_active_users) {
@@ -77,6 +77,9 @@ io.on("connection", (socket) => {
                 socket.emit('user connect', { username: connected_user_obj["username"], att: connected_user_obj["att"] });
             }
         }
+
+        //Notify all connected users of the newly connected user
+        io.emit('user connect', { username: user_obj["username"], att: user_obj["att"] });
 
         //Let the new connection know of the previous messages
         socket.emit('message log', message_stack);

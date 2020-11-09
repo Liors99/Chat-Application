@@ -87,21 +87,37 @@ function App() {
 
     //Checking for new updated username
     socket.on('update valid username', (data) => {
+
       const old_username = data.old_username;
       const new_username = data.new_username;
 
       //Update the cookie information
       setCookieUsername(new_username);
 
+
+
       //Add the "new" username and assign it all the attributes of the old name
       setActiveUsers((oldUsers) => {
-        let newUsers = oldUsers;
-        const old_att = newUsers[old_username];
-        newUsers[new_username] = old_att;
+        const keys = Object.keys(oldUsers)
+        let index_username = keys.indexOf(old_username); //Get the position of the old username
+        console.log(index_username);
+        let newUsers = {};
+        for (let i = 0; i < keys.length; i++) {
+          const key = keys[i];
+          if (i === index_username) {
+            newUsers[new_username] = oldUsers[old_username];
+          }
+          else {
+            newUsers[key] = oldUsers[key];
+          }
+        }
+
+        console.log(newUsers);
 
         return newUsers;
       });
 
+      /*
       //Remove the old name
       setActiveUsers((oldUsers) => {
         let newUsers = oldUsers;
@@ -109,6 +125,7 @@ function App() {
 
         return newUsers;
       });
+      */
 
       //Update our name if it matches with the one sent
       setThisName(oldName => {
