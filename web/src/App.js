@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 import TextField from '@material-ui/core/TextField';
 import Grid from '@material-ui/core/Grid';
@@ -18,6 +18,8 @@ function App() {
   const [chat, setChat] = useState([]);
   const [activeUsers, setActiveUsers] = useState({});
 
+
+  const dummy = useRef(); //for autoscroll
 
   useEffect(() => {
 
@@ -74,6 +76,7 @@ function App() {
 
       console.log(id);
 
+      dummy.current.scrollIntoView({ behavior: 'smooth' });
       setChat(oldChat => [...oldChat, { username: username, att: att, message: message, ts: ts, id: id }]);
     });
 
@@ -145,6 +148,7 @@ function App() {
 
   const onTextChange = (e) => {
     setMessage(e.target.value);
+
   }
 
   const onMessageSubmit = (e) => {
@@ -216,6 +220,7 @@ function App() {
       console.log(parsed_msg);
       socket.emit('message', { username: thisName, message: parsed_msg });
       setMessage("");
+      setInputErrorMsg("");
     }
 
   }
@@ -246,6 +251,42 @@ function App() {
   }
 
   return (
+    <>
+      <Grid
+        container
+        spacing={0}
+        id="app-container"
+      >
+        <Grid item xs={4}>
+          <section id="user-list">
+            <main id="user-display">
+              <h1>User list</h1>
+              {renderActiveUserList()}
+            </main>
+          </section>
+        </Grid>
+
+        <Grid item xs={8}>
+          <section id="chat-window">
+            <main id="chat-display">
+              {renderChat()}
+              <span ref={dummy}></span>
+            </main>
+
+            <form onSubmit={onMessageSubmit}>
+              <input placeholder="say something nice" onChange={e => onTextChange(e)} value={message} />
+              <button type="submit">🕊️</button>
+            </form>
+            <span id="error-message">{inputErrorMsg === "" ? "" : inputErrorMsg}</span>
+          </section>
+        </Grid>
+
+      </Grid>
+
+
+
+    </>
+    /*
     <Grid
       container
       spacing={0}
@@ -285,7 +326,7 @@ function App() {
                       label="Message"
                       fullWidth
                       className={"text-area"}
-
+                      variant="outlined"
 
                     />
 
@@ -314,6 +355,7 @@ function App() {
 
 
     </Grid>
+    */
   );
 }
 
