@@ -98,7 +98,7 @@ io.on("connection", (socket) => {
         const att = user_obj["att"];
         //Add message to the stack and emit to the rest
         const ts = new Date().toLocaleTimeString();
-        const send_obj = { username: data.username, att: att, message: data.message, ts: ts };
+        const send_obj = { username: data.username, att: att, message: data.message, ts: ts, id: socket.id };
         addMessageToStack(send_obj);
         io.emit("message", send_obj);
     });

@@ -12,6 +12,7 @@ const socket = io.connect("http://localhost:4000");
 function App() {
   let [, setState] = useState();
   const [thisName, setThisName] = useState("");
+  const [sockid, setSockId] = useState();
   const [message, setMessage] = useState("");
   const [inputErrorMsg, setInputErrorMsg] = useState("");
   const [chat, setChat] = useState([]);
@@ -20,6 +21,8 @@ function App() {
 
   useEffect(() => {
 
+    setSockId(socket.id);
+    console.log(socket.id);
     //Sets the cookie username information
     const setCookieUsername = (username) => {
       const MINUTES = 5;
@@ -67,8 +70,11 @@ function App() {
       const att = data.att;
       const message = data.message;
       const ts = data.ts
+      const id = data.id;
 
-      setChat(oldChat => [...oldChat, { username: username, att: att, message: message, ts: ts }]);
+      console.log(id);
+
+      setChat(oldChat => [...oldChat, { username: username, att: att, message: message, ts: ts, id: id }]);
     });
 
     socket.on('message log', (data) => {
@@ -116,16 +122,6 @@ function App() {
 
         return newUsers;
       });
-
-      /*
-      //Remove the old name
-      setActiveUsers((oldUsers) => {
-        let newUsers = oldUsers;
-        delete newUsers[old_username];
-
-        return newUsers;
-      });
-      */
 
       //Update our name if it matches with the one sent
       setThisName(oldName => {
@@ -240,10 +236,10 @@ function App() {
   }
 
   const renderChat = () => {
-    return chat.map(({ username, att, message, ts }, index) => (
+    return chat.map(({ username, att, message, ts, id }, index) => (
       <div key={index}>
         <h3 style={{ "color": att["color"] }}>
-          {username} at {ts} <span style={{ color: "black", fontWeight: (username === thisName ? "bold" : "normal") }}>{message}</span>
+          {username} at {ts} <span style={{ color: "black", fontWeight: (id === sockid ? "bold" : "normal") }}>{message}</span>
         </h3>
       </div>
     ))
