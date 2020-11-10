@@ -16,14 +16,15 @@ body {
 #user-list{
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: 95vh;
     background-color: #23272A;
     font-size: 1rem;
     text-align: left;
+    padding-bottom: 5vh;
 }
 
 #user-display {
-    min-height: 100vh;
+    min-height: 95vh;
     overflow-y: scroll;
     display: flex;
     flex-direction: column;
@@ -31,7 +32,13 @@ body {
 
 #user-list-title{
     color: white;
-    text-decoration: underline;
+    text-align: center;
+}
+
+.user-display{
+    margin-left: 1vw;
+    margin-bottom: 1vh;
+    font-size: 1rem;
 }
 
 
@@ -99,9 +106,6 @@ main::-webkit-scrollbar {
     width: 0.25rem;
 }
   
-main::-webkit-scrollbar-track {
-    background: #1e1e24;
-}
   
 main::-webkit-scrollbar-thumb {
     background: #7289DA;
@@ -119,6 +123,5 @@ main::-webkit-scrollbar-thumb {
 .chat-message{
     width: 50px;
     color: white;
-    font-size: 0.95rem; 
-    
+    font-size: 0.95rem;    
 }

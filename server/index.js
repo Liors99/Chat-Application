@@ -20,7 +20,7 @@ const generateUserId = () => {
 }
 
 const addMessageToStack = (message) => {
-    const MAX_MSGS = 5;
+    const MAX_MSGS = 200;
 
     if (message_stack.length >= MAX_MSGS) {
         message_stack.shift();
@@ -97,7 +97,7 @@ io.on("connection", (socket) => {
     socket.on('message', (data) => {
         const att = user_obj["att"];
         //Add message to the stack and emit to the rest
-        const ts = new Date().toLocaleTimeString();
+        const ts = new Date().toUTCString();
         const send_obj = { username: data.username, att: att, message: data.message, ts: ts, id: socket.id };
         addMessageToStack(send_obj);
         io.emit("message", send_obj);

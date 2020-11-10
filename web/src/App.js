@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
-import TextField from '@material-ui/core/TextField';
 import Grid from '@material-ui/core/Grid';
-import Button from '@material-ui/core/Button';
 import SendIcon from '@material-ui/icons/Send';
 
 import './App.css';
@@ -24,7 +22,6 @@ function App() {
   useEffect(() => {
 
     setSockId(socket.id);
-    console.log(socket.id);
     //Sets the cookie username information
     const setCookieUsername = (username) => {
       const MINUTES = 5;
@@ -39,7 +36,6 @@ function App() {
         .split('; ')
         .find(row => row.startsWith('username'))
         .split('=')[1];
-      console.log(cookieValue);
       socket.emit('cookie username', { "username": cookieValue });
     }
     else {
@@ -48,14 +44,12 @@ function App() {
 
     //Handle new user
     socket.on('user connect', (data) => {
-      console.log("Connected user: " + data.username);
       setActiveUsers((oldUsers) => ({ ...oldUsers, [data.username]: data.att }));
     });
 
 
     //Handle user disconnect
     socket.on('user disconnect', (username) => {
-      console.log("Disconnected user: " + username);
       setActiveUsers((oldUsers) => {
         let newUsers = oldUsers;
         delete newUsers[username];
@@ -71,17 +65,25 @@ function App() {
       const username = data.username;
       const att = data.att;
       const message = data.message;
-      const ts = data.ts
+
+      //Date formatting (convert UTC time to local time)
+      const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: 'numeric' };
+      const local_time = new Date(data.ts);
+      const ts = local_time.toLocaleDateString("en-US", options);
+      console.log(local_time.toLocaleDateString("en-US", options));
       const id = data.id;
-
-      console.log(id);
-
 
       setChat(oldChat => [...oldChat, { username: username, att: att, message: message, ts: ts, id: id }]);
       dummy.current.scrollIntoView({ behavior: 'smooth' });
     });
 
     socket.on('message log', (data) => {
+      const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: 'numeric' };
+      for (let dataItem of data) {
+        let local_ts = new Date(dataItem.ts);
+        dataItem.ts = local_ts.toLocaleDateString("en-US", options);
+        console.log(dataItem.ts);
+      }
       setChat(data);
       dummy.current.scrollIntoView();
     });
@@ -111,7 +113,6 @@ function App() {
       setActiveUsers((oldUsers) => {
         const keys = Object.keys(oldUsers)
         let index_username = keys.indexOf(old_username); //Get the position of the old username
-        console.log(index_username);
         let newUsers = {};
         for (let i = 0; i < keys.length; i++) {
           const key = keys[i];
@@ -122,8 +123,6 @@ function App() {
             newUsers[key] = oldUsers[key];
           }
         }
-
-        console.log(newUsers);
 
         return newUsers;
       });
@@ -204,6 +203,10 @@ function App() {
           setInputErrorMsg("Usage: /name <new name>");
           return;
         }
+        else if (msg_ar[1] === "") {
+          setInputErrorMsg("Name cannot be empty");
+          return;
+        }
 
         //If we are at this point the input has been validated
         socket.emit('update username', { old_username: thisName, new_username: msg_ar[1] });
@@ -217,12 +220,15 @@ function App() {
     else {
       //Otherwise it is a normal message
 
-      //Parse any emojis
-      let parsed_msg = parseEmojisMsg(message);
-      console.log(parsed_msg);
-      socket.emit('message', { username: thisName, message: parsed_msg });
-      setMessage("");
-      setInputErrorMsg("");
+      //Check if not empty
+      if (message !== "") {
+        //Parse any emojis
+        let parsed_msg = parseEmojisMsg(message);
+        socket.emit('message', { username: thisName, message: parsed_msg });
+        setMessage("");
+        setInputErrorMsg("");
+      }
+
     }
 
   }
@@ -233,7 +239,7 @@ function App() {
       const user_color = activeUsers[user]["color"];
       ret.push(
         <Grid item xs={12}>
-          <h2 style={{ color: user_color }}>{user}{user === thisName ? "(You)" : ""}</h2>
+          <h2 className="user-display" style={{ color: user_color }}>{user}{user === thisName ? " (You)" : ""}</h2>
         </Grid>
       );
     }
@@ -266,7 +272,7 @@ function App() {
         <Grid item xs={4}>
           <section id="user-list">
             <main id="user-display">
-              <h1 id="user-list-title">Online users:</h1>
+              <h1 id="user-list-title">Online - {Object.keys(activeUsers).length}</h1>
               {renderActiveUserList()}
             </main>
           </section>
@@ -292,76 +298,6 @@ function App() {
 
 
     </>
-    /*
-    <Grid
-      container
-      spacing={0}
-      id="chat-container"
-    >
-      <Grid item xs={3} id="user-list">
-        <h1> Online Users </h1>
-        <Grid container
-          direction="column"
-          justify="center"
-          alignItems="center"
-        >
-          {renderActiveUserList()}
-        </Grid>
-      </Grid>
-
-      <Grid item xs={9}>
-        <Grid container id="chat-and-msg">
-          <Grid item xs={12} id="chat-window">
-            {renderChat()}
-
-          </Grid>
-
-
-          <Grid item xs={12} id="new-message-container">
-
-            {
-              <form onSubmit={onMessageSubmit} style={{ height: "100%" }}>
-                <Grid container spacing={0} style={{ height: "100%" }}>
-                  <Grid item xs={10}>
-                    <TextField
-                      error={inputErrorMsg === "" ? false : true}
-                      helperText={inputErrorMsg}
-                      name="message"
-                      onChange={e => onTextChange(e)}
-                      value={message}
-                      label="Message"
-                      fullWidth
-                      className={"text-area"}
-                      variant="outlined"
-
-                    />
-
-                  </Grid>
-                  <Grid item xs={2}>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      endIcon={<SendIcon />}
-                      type="submit"
-                      fullWidth
-                      className={"text-area"}
-                    >
-                      Send
-                  </Button>
-
-                  </Grid>
-
-                </Grid>
-              </form>
-            }
-          </Grid>
-        </Grid>
-      </Grid>
-
-
-
-    </Grid>
-    */
   );
 }
 
