@@ -70,7 +70,6 @@ function App() {
       const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: 'numeric' };
       const local_time = new Date(data.ts);
       const ts = local_time.toLocaleDateString("en-US", options);
-      console.log(local_time.toLocaleDateString("en-US", options));
       const id = data.id;
 
       setChat(oldChat => [...oldChat, { username: username, att: att, message: message, ts: ts, id: id }]);
@@ -82,7 +81,6 @@ function App() {
       for (let dataItem of data) {
         let local_ts = new Date(dataItem.ts);
         dataItem.ts = local_ts.toLocaleDateString("en-US", options);
-        console.log(dataItem.ts);
       }
       setChat(data);
       dummy.current.scrollIntoView();
