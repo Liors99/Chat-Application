@@ -5,7 +5,7 @@ import SendIcon from '@material-ui/icons/Send';
 
 import './App.css';
 
-const socket = io.connect("http://localhost:4000");
+const socket = io.connect("https://lior-chatapp-server.herokuapp.com/");
 
 function App() {
   let [, setState] = useState();
