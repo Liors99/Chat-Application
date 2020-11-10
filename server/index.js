@@ -60,7 +60,7 @@ io.on("connection", (socket) => {
         //Add the user to all the users list
         all_active_users[socket.id] = {};
         all_active_users[socket.id]["username"] = username;
-        all_active_users[socket.id]["att"] = { "color": "rgb(0, 0, 0)" }
+        all_active_users[socket.id]["att"] = { "color": "rgb(255, 255, 255)" }
         //all_active_users[socket.id][username] = { "color": "rgb(0, 0, 0)" };
 
         user_obj = all_active_users[socket.id];

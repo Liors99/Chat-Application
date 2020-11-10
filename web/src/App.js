@@ -76,12 +76,14 @@ function App() {
 
       console.log(id);
 
-      dummy.current.scrollIntoView({ behavior: 'smooth' });
+
       setChat(oldChat => [...oldChat, { username: username, att: att, message: message, ts: ts, id: id }]);
+      dummy.current.scrollIntoView({ behavior: 'smooth' });
     });
 
     socket.on('message log', (data) => {
       setChat(data);
+      dummy.current.scrollIntoView();
     });
 
     socket.on('set username', (username) => {
@@ -231,7 +233,7 @@ function App() {
       const user_color = activeUsers[user]["color"];
       ret.push(
         <Grid item xs={12}>
-          <h2 style={{ color: user_color }}>{user} {user === thisName ? "(You)" : ""}</h2>
+          <h2 style={{ color: user_color }}>{user}{user === thisName ? "(You)" : ""}</h2>
         </Grid>
       );
     }
@@ -242,10 +244,14 @@ function App() {
 
   const renderChat = () => {
     return chat.map(({ username, att, message, ts, id }, index) => (
-      <div key={index}>
-        <h3 style={{ "color": att["color"] }}>
-          {username} at {ts} <span style={{ color: "black", fontWeight: (id === sockid ? "bold" : "normal") }}>{message}</span>
-        </h3>
+      <div key={index} className="no-text-overflow">
+        <h2 style={{ "color": att["color"], fontSize: "1.2rem" }}>
+          {username} <span className="chat-message-ts"> {ts}</span>
+        </h2>
+        <div className="chat-message no-text-overflow" style={{ width: "100%" }}>
+          <span style={{ fontWeight: (id === sockid ? "bold" : "normal") }}>{message}</span>
+        </div>
+
       </div>
     ))
   }
@@ -260,7 +266,7 @@ function App() {
         <Grid item xs={4}>
           <section id="user-list">
             <main id="user-display">
-              <h1>User list</h1>
+              <h1 id="user-list-title">Online users:</h1>
               {renderActiveUserList()}
             </main>
           </section>
@@ -270,12 +276,12 @@ function App() {
           <section id="chat-window">
             <main id="chat-display">
               {renderChat()}
-              <span ref={dummy}></span>
+              <div ref={dummy} id="last-message"></div>
             </main>
 
             <form onSubmit={onMessageSubmit}>
-              <input placeholder="say something nice" onChange={e => onTextChange(e)} value={message} />
-              <button type="submit">🕊️</button>
+              <input placeholder="Message" onChange={e => onTextChange(e)} value={message} />
+              <button type="submit"><SendIcon /></button>
             </form>
             <span id="error-message">{inputErrorMsg === "" ? "" : inputErrorMsg}</span>
           </section>
