@@ -6,7 +6,7 @@ import SendIcon from '@material-ui/icons/Send';
 import './App.css';
 
 const dev_address = "http://localhost:4000";
-const deploy_address = "https://lior-chatapp-server.liors99.vercel.app/";
+const deploy_address = "https://lior-chatapp-server.herokuapp.com/";
 
 const socket = io.connect(deploy_address);
 
