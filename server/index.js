@@ -2,23 +2,25 @@ const app = require("express")();
 const http = require("http").createServer(app);
 const io = require("socket.io")(http);
 
-//Dictiomary with username: {color: }
+//Dictiomary with username: {color: , ID:}
 let all_active_users = {};
 
 //Array containing all the previous messages
 let message_stack = [];
 
+let all_IDS = [];
 //Generates a random 5 digit ID
 const generateUserId = () => {
     let id;
     let username;
     do {
         id = Math.floor(Math.random() * 90000) + 10000;
-        username = "user-" + id
+        username = "user-" + id;
     } while (username in all_active_users);
     return username;
 }
 
+//Adds a message to the stack of messages
 const addMessageToStack = (message) => {
     const MAX_MSGS = 200;
 
@@ -60,13 +62,12 @@ io.on("connection", (socket) => {
         //Add the user to all the users list
         all_active_users[socket.id] = {};
         all_active_users[socket.id]["username"] = username;
-        all_active_users[socket.id]["att"] = { "color": "rgb(255, 255, 255)" }
-        //all_active_users[socket.id][username] = { "color": "rgb(0, 0, 0)" };
+        all_active_users[socket.id]["att"] = { "color": "rgb(255, 255, 255)", "id": socket.id }
 
         user_obj = all_active_users[socket.id];
 
         //Assign username
-        socket.emit('set username', user_obj["username"]);
+        socket.emit('set username', { "username": user_obj["username"], "id": user_obj["att"]["id"] });
 
         //Dumb first and then emit later so that the order is preseved across different clients
 
@@ -89,8 +90,12 @@ io.on("connection", (socket) => {
 
     //Handle disconnect
     socket.on('disconnect', () => {
-        io.emit('user disconnect', user_obj["username"]);
-        delete all_active_users[socket.id];
+        if (user_obj !== undefined) {
+            io.emit('user disconnect', user_obj["username"]);
+            delete all_active_users[socket.id];
+        }
+
+
     });
 
 
@@ -98,7 +103,7 @@ io.on("connection", (socket) => {
         const att = user_obj["att"];
         //Add message to the stack and emit to the rest
         const ts = new Date().toUTCString();
-        const send_obj = { username: data.username, att: att, message: data.message, ts: ts, id: socket.id };
+        const send_obj = { username: data.username, att: att, message: data.message, ts: ts, id: user_obj["att"]["id"] };
         addMessageToStack(send_obj);
         io.emit("message", send_obj);
     });
@@ -132,7 +137,7 @@ io.on("connection", (socket) => {
 });
 
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 http.listen(PORT, () => {
     console.log("Listening on port 4000");
 });

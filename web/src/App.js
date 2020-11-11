@@ -5,7 +5,10 @@ import SendIcon from '@material-ui/icons/Send';
 
 import './App.css';
 
-const socket = io.connect("https://lior-chatapp-server.herokuapp.com/");
+const dev_address = "http://localhost:4000";
+const deploy_address = "https://lior-chatapp-server.herokuapp.com/";
+
+const socket = io.connect(deploy_address);
 
 function App() {
   let [, setState] = useState();
@@ -16,12 +19,11 @@ function App() {
   const [chat, setChat] = useState([]);
   const [activeUsers, setActiveUsers] = useState({});
 
-
   const dummy = useRef(); //for autoscroll
 
   useEffect(() => {
 
-    setSockId(socket.id);
+    //setSockId(socket.id);
     //Sets the cookie username information
     const setCookieUsername = (username) => {
       const MINUTES = 5;
@@ -86,10 +88,11 @@ function App() {
       dummy.current.scrollIntoView();
     });
 
-    socket.on('set username', (username) => {
-      //Set the cookie info
-      setCookieUsername(username);
-      setThisName(username);
+    socket.on('set username', (data) => {
+      //Set the cookie info and the current username and socket ID (for some reason in deployment build, comparing it from this socket yields a diffenent ID)
+      setSockId(data["id"]);
+      setCookieUsername(data["username"]);
+      setThisName(data["username"]);
     });
 
     socket.on('update color', (data) => {
