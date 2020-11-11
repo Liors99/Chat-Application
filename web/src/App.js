@@ -23,10 +23,9 @@ function App() {
 
   useEffect(() => {
 
-    //setSockId(socket.id);
     //Sets the cookie username information
     const setCookieUsername = (username) => {
-      const MINUTES = 5;
+      const MINUTES = 60; //Set cookie username to 1 hour
       let date = new Date();
       date.setTime(date.getTime() + (MINUTES * 60 * 1000));
       document.cookie = "username=" + username + "; expires = " + date.toUTCString() + ";";
