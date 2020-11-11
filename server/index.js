@@ -139,6 +139,6 @@ io.on("connection", (socket) => {
 
 const PORT = process.env.PORT || 4000;
 http.listen(PORT, () => {
-    console.log("Listening on port 4000");
+    console.log("Listening on port " + PORT);
 });
 
